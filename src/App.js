@@ -2,93 +2,138 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
+  // ================================
+  // STATES
+  // ================================
+
+  // List of guests
   const [guests, setGuests] = useState([
     { id: 1, name: 'John Doe', email: 'john@example.com', phone: '123-456-7890' },
     { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '098-765-4321' }
   ]);
-  
+
+  // Form input fields
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: ''
   });
-  
+
+  // Tracks which guest is currently being edited (null = not editing)
   const [editingId, setEditingId] = useState(null);
+
+  // Search bar state
   const [searchTerm, setSearchTerm] = useState('');
 
-  // CREATE - Add new guest
+
+  // ================================
+  // CREATE & UPDATE
+  // ================================
+
+  // Add a new guest OR update existing guest
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
+    // Validation (all fields must be filled)
     if (!formData.name || !formData.email || !formData.phone) {
       alert('Please fill in all fields');
       return;
     }
 
     if (editingId) {
-      // UPDATE - Edit existing guest
-      setGuests(guests.map(guest => 
-        guest.id === editingId 
-          ? { ...guest, ...formData }
-          : guest
-      ));
-      setEditingId(null);
+      // UPDATE guest
+      setGuests(
+        guests.map(guest =>
+          guest.id === editingId
+            ? { ...guest, ...formData } // update data
+            : guest
+        )
+      );
+      setEditingId(null); // exit editing mode
+
     } else {
-      // CREATE - Add new guest
+      // CREATE new guest
       const newGuest = {
-        id: Date.now(),
+        id: Date.now(), // unique ID
         ...formData
       };
       setGuests([...guests, newGuest]);
     }
-    
-    // Reset form
+
+    // Reset form after submit
     setFormData({ name: '', email: '', phone: '' });
   };
 
-  // UPDATE - Populate form with guest data for editing
+
+  // ================================
+  // EDIT GUEST
+  // ================================
   const handleEdit = (guest) => {
+    // Fill form with selected guest's data
     setFormData({
       name: guest.name,
       email: guest.email,
       phone: guest.phone
     });
+
+    // Set editing mode
     setEditingId(guest.id);
   };
 
-  // DELETE - Remove guest
+
+  // ================================
+  // DELETE GUEST
+  // ================================
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this guest?')) {
       setGuests(guests.filter(guest => guest.id !== id));
     }
   };
 
-  // Cancel editing
+
+  // ================================
+  // CANCEL EDIT MODE
+  // ================================
   const handleCancel = () => {
     setFormData({ name: '', email: '', phone: '' });
     setEditingId(null);
   };
 
-  // Filter guests based on search term
+
+  // ================================
+  // FILTER SYSTEM (SEARCH)
+  // ================================
   const filteredGuests = guests.filter(guest =>
     guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.phone.includes(searchTerm)
   );
 
+
+  // ================================
+  // UI (RENDER)
+  // ================================
   return (
     <div className="App">
       <div className="container">
+
+        {/* HEADER */}
         <header className="header">
           <h1>🎉 Guest List Manager</h1>
           <p>Manage your event guests with ease</p>
         </header>
 
         <div className="content">
-          {/* Guest Form */}
+
+          {/* ===========================
+              LEFT SECTION - FORM
+          ============================ */}
           <div className="form-section">
             <h2>{editingId ? 'Edit Guest' : 'Add New Guest'}</h2>
+
             <form onSubmit={handleSubmit}>
+              
+              {/* Name field */}
               <div className="form-group">
                 <label htmlFor="name">Name</label>
                 <input
@@ -100,6 +145,7 @@ function App() {
                 />
               </div>
 
+              {/* Email field */}
               <div className="form-group">
                 <label htmlFor="email">Email</label>
                 <input
@@ -111,6 +157,7 @@ function App() {
                 />
               </div>
 
+              {/* Phone field */}
               <div className="form-group">
                 <label htmlFor="phone">Phone</label>
                 <input
@@ -122,10 +169,13 @@ function App() {
                 />
               </div>
 
+              {/* Buttons */}
               <div className="button-group">
                 <button type="submit" className="btn btn-primary">
                   {editingId ? '✓ Update Guest' : '+ Add Guest'}
                 </button>
+
+                {/* Show Cancel only while editing */}
                 {editingId && (
                   <button type="button" className="btn btn-secondary" onClick={handleCancel}>
                     Cancel
@@ -135,10 +185,16 @@ function App() {
             </form>
           </div>
 
-          {/* Guest List */}
+
+          {/* ===========================
+               RIGHT SECTION – GUEST LIST
+          ============================ */}
           <div className="list-section">
+
+            {/* Search bar & count */}
             <div className="list-header">
               <h2>Guest List ({filteredGuests.length})</h2>
+
               <input
                 type="text"
                 className="search-input"
@@ -148,40 +204,52 @@ function App() {
               />
             </div>
 
+            {/* When no results */}
             {filteredGuests.length === 0 ? (
               <div className="empty-state">
-                <p>No guests found. {searchTerm ? 'Try a different search.' : 'Add your first guest!'}</p>
+                <p>
+                  No guests found. {searchTerm ? 'Try a different search.' : 'Add your first guest!'}
+                </p>
               </div>
             ) : (
+
+              // Guest Cards
               <div className="guest-list">
                 {filteredGuests.map(guest => (
                   <div key={guest.id} className="guest-card">
+
                     <div className="guest-info">
                       <h3>{guest.name}</h3>
                       <p>📧 {guest.email}</p>
                       <p>📱 {guest.phone}</p>
                     </div>
+
+                    {/* Edit & Delete buttons */}
                     <div className="guest-actions">
-                      <button 
-                        className="btn-icon btn-edit" 
+                      <button
+                        className="btn-icon btn-edit"
                         onClick={() => handleEdit(guest)}
                         title="Edit guest"
                       >
                         ✏️
                       </button>
-                      <button 
-                        className="btn-icon btn-delete" 
+
+                      <button
+                        className="btn-icon btn-delete"
                         onClick={() => handleDelete(guest.id)}
                         title="Delete guest"
                       >
                         🗑️
                       </button>
                     </div>
+
                   </div>
                 ))}
               </div>
+
             )}
           </div>
+
         </div>
       </div>
     </div>
